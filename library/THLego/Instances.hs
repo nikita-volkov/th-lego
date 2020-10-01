@@ -27,21 +27,28 @@ isLabel label repType fromLabelExp =
 -- ** Constructor
 -------------------------
 
-sumConstructorIsLabel :: TyLit -> Name -> Name -> [Type] -> Dec
-sumConstructorIsLabel label typeName conName memberTypes =
+newtypeConstructorIsLabel :: TyLit -> Type -> Name -> Type -> Dec
+newtypeConstructorIsLabel label ownerType conName memberType =
   isLabel label repType fromLabelExp
   where
     repType =
-      foldr (\ a b -> AppT (AppT ArrowT a) b) (ConT typeName) memberTypes
+      AppT (AppT ArrowT ownerType) memberType
     fromLabelExp =
       ConE conName
 
-enumConstructorIsLabel :: TyLit -> Name -> Name -> Dec
-enumConstructorIsLabel label typeName conName =
+sumConstructorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
+sumConstructorIsLabel label ownerType conName memberTypes =
   isLabel label repType fromLabelExp
   where
     repType =
-      ConT typeName
+      foldr (\ a b -> AppT (AppT ArrowT a) b) ownerType memberTypes
+    fromLabelExp =
+      ConE conName
+
+enumConstructorIsLabel :: TyLit -> Type -> Name -> Dec
+enumConstructorIsLabel label ownerType conName =
+  isLabel label ownerType fromLabelExp
+  where
     fromLabelExp =
       ConE conName
 
@@ -69,6 +76,18 @@ sumAccessorIsLabel label ownerType conName memberTypes =
     fromLabelExp =
       Lambdas.adtConstructorNarrower conName (length memberTypes)
 
+enumAccessorIsLabel :: TyLit -> Type -> Name -> Dec
+enumAccessorIsLabel label ownerType conName =
+  isLabel label repType fromLabelExp
+  where
+    repType =
+      multiAppT ArrowT [ownerType, projectionType]
+      where
+        projectionType =
+          ConT ''Bool
+    fromLabelExp =
+      Lambdas.enumConstructorToBool conName
+
 
 -- * 'HasField'
 -------------------------
@@ -86,8 +105,8 @@ hasField fieldLabel ownerType projectionType getFieldFunClauses =
 {-|
 Field which projects enum values into bools.
 -}
-boolEnumHasField :: TyLit -> Type -> Name -> Dec
-boolEnumHasField fieldLabel ownerType constructorName =
+enumHasField :: TyLit -> Type -> Name -> Dec
+enumHasField fieldLabel ownerType constructorName =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where
     projectionType =
