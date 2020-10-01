@@ -1,12 +1,12 @@
-module THToolkit.Instances
+module THLego.Instances
 where
 
-import THToolkit.Prelude
-import THToolkit.Helpers
+import THLego.Prelude
+import THLego.Helpers
 import Language.Haskell.TH
 import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
-import qualified THToolkit.Lambdas as Lambdas
+import qualified THLego.Lambdas as Lambdas
 
 
 -- * IsLabel

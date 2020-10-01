@@ -1,4 +1,4 @@
-module THToolkit.Prelude
+module THLego.Prelude
 ( 
   module Exports,
   showAsText,

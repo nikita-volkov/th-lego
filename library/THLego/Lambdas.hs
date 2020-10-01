@@ -1,8 +1,8 @@
-module THToolkit.Lambdas
+module THLego.Lambdas
 where
 
-import THToolkit.Prelude
-import THToolkit.Helpers
+import THLego.Prelude
+import THLego.Helpers
 import Language.Haskell.TH
 import qualified TemplateHaskell.Compat.V0208 as Compat
 

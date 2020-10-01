@@ -1,7 +1,7 @@
-module THToolkit.Helpers
+module THLego.Helpers
 where
 
-import THToolkit.Prelude
+import THLego.Prelude
 import Language.Haskell.TH
 import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
