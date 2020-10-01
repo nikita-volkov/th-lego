@@ -82,6 +82,10 @@ multiAppE :: Exp -> [Exp] -> Exp
 multiAppE base args =
   foldl' AppE base args
 
+arrowChainT :: [Type] -> Type -> Type
+arrowChainT params result =
+  foldr (\ a b -> AppT (AppT ArrowT a) b) result params
+
 appliedTupleT :: [Type] -> Type
 appliedTupleT a =
   foldl' AppT (TupleT (length a)) a

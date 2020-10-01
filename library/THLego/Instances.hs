@@ -32,7 +32,7 @@ newtypeConstructorIsLabel label ownerType conName memberType =
   isLabel label repType fromLabelExp
   where
     repType =
-      AppT (AppT ArrowT ownerType) memberType
+      arrowChainT [memberType] ownerType
     fromLabelExp =
       ConE conName
 
@@ -41,7 +41,7 @@ sumConstructorIsLabel label ownerType conName memberTypes =
   isLabel label repType fromLabelExp
   where
     repType =
-      foldr (\ a b -> AppT (AppT ArrowT a) b) ownerType memberTypes
+      arrowChainT memberTypes ownerType
     fromLabelExp =
       ConE conName
 
@@ -51,6 +51,18 @@ enumConstructorIsLabel label ownerType conName =
   where
     fromLabelExp =
       ConE conName
+
+{-|
+'IsLabel' instance which converts tuple to ADT.
+-}
+tupleAdtConstructorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
+tupleAdtConstructorIsLabel label ownerType conName memberTypes =
+  isLabel label repType fromLabelExp
+  where
+    repType =
+      arrowChainT [appliedTupleT memberTypes] ownerType
+    fromLabelExp =
+      Lambdas.tupleToProduct conName (length memberTypes)
 
 -- ** Accessor
 -------------------------
