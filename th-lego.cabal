@@ -28,7 +28,7 @@ library
   other-modules:
     THLego.Prelude
   build-depends:
-    base >=4.11 && <5,
-    template-haskell >=2.15 && <3,
+    base >=4.9 && <5,
+    template-haskell >=2.18 && <3,
     template-haskell-compat-v0208 >=0.1.5 && <0.2,
     text >=1 && <2
