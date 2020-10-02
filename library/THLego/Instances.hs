@@ -115,9 +115,21 @@ hasField fieldLabel ownerType projectionType getFieldFunClauses =
       FunD 'getField getFieldFunClauses
 
 {-|
-Field which projects enum values into bools.
+'HasField' instance which focuses on a variant of an enum
+and projects it into 'Bool' signaling whether the value matches.
+
+Generates code of the following pattern:
+
+> instance HasField "fieldLabel" enumType Bool
 -}
-enumHasField :: TyLit -> Type -> Name -> Dec
+enumHasField ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Enum type. -}
+  Type ->
+  {-| Name of the constructor. -}
+  Name ->
+  Dec
 enumHasField fieldLabel ownerType constructorName =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where
@@ -137,7 +149,28 @@ enumHasField fieldLabel ownerType constructorName =
             bodyExp =
               ConE 'False
 
-sumHasField :: TyLit -> Type -> Name -> [Type] -> Dec
+{-|
+Instance of 'HasField' for a constructor of a sum ADT,
+projecting it into a 'Maybe' tuple of its members.
+
+Generates code of the following pattern:
+
+> instance HasField "fieldLabel" sumAdt (Maybe projectionType)
+
+- When the amount of member types is 0, @projectionType@ is @()@.
+- When the amount of member types is 1, it is that member type.
+- Otherwise it is a tuple of those members.
+-}
+sumHasField ::
+  {-| Field label. -}
+  TyLit ->
+  {-| The ADT type. -}
+  Type ->
+  {-| Name of the constructor. -}
+  Name ->
+  {-| Member types of that constructor. -}
+  [Type] ->
+  Dec
 sumHasField fieldLabel ownerType constructorName memberTypes =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where
@@ -162,7 +195,23 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
             bodyExp =
               ConE 'Nothing
 
-productHasField :: TyLit -> Type -> Type -> Name -> Int -> Int -> Dec
+{-|
+Instance of 'HasField' for a member of a product type.
+-}
+productHasField ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Type of the product. -}
+  Type ->
+  {-| Type of the member we're focusing on. -}
+  Type ->
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members in the product. -}
+  Int ->
+  {-| Offset of the member we're focusing on. -}
+  Int ->
+  Dec
 productHasField fieldLabel ownerType projectionType constructorName totalMemberTypes offset =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where

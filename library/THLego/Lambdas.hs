@@ -17,7 +17,19 @@ matcher matches =
 {-|
 Lambda expression, which extracts a product member by index.
 -}
-productGetter :: Name -> Int -> Int -> Exp
+productGetter ::
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members. -}
+  Int ->
+  {-| Index of the member. -}
+  Int ->
+  {-|
+  Lambda expression of the following form:
+  
+  > product -> member
+  -}
+  Exp
 productGetter conName numMembers index =
   LamE [pat] exp
   where
@@ -36,7 +48,19 @@ productGetter conName numMembers index =
 {-|
 Lambda expression, which sets a product member by index.
 -}
-productSetter :: Name -> Int -> Int -> Exp
+productSetter ::
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members. -}
+  Int ->
+  {-| Index of the member. -}
+  Int ->
+  {-|
+  Lambda expression of the following form:
+
+  > product -> member -> product
+  -}
+  Exp
 productSetter conName numMembers index =
   LamE [stateP, valP] exp
   where
