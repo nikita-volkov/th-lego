@@ -31,6 +31,10 @@ isLabel label repType fromLabelExp =
 -- ** Constructor
 -------------------------
 
+{-|
+
+> instance (a ~ Text) => IsLabel "error" (a -> Result)
+-}
 constructorIsLabel :: TyLit -> Type -> [Type] -> Exp -> Dec
 constructorIsLabel label ownerType memberTypes fromLabelExp =
   InstanceD Nothing paramPreds headType [fromLabelDec]
@@ -72,6 +76,69 @@ tupleAdtConstructorIsLabel label ownerType conName memberTypes =
       appliedTupleT memberTypes
     fromLabelExp =
       Lambdas.tupleToProduct conName (length memberTypes)
+
+-- ** Mapper
+-------------------------
+
+{-|
+Template of 'IsLabel' for instances mapping to mapper functions.
+
+> instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
+
+-}
+mapperIsLabel ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Type of the product. -}
+  Type ->
+  {-| Type of the member we\'re focusing on. -}
+  Type ->
+  {-| 'fromLabel' definition expression. -}
+  Exp ->
+  {-| 'IsLabel' instance declaration. -}
+  Dec
+mapperIsLabel label ownerType memberType fromLabelExp =
+  InstanceD Nothing [memberPred] headType [fromLabelDec]
+  where
+    projVarType =
+      VarT (mkName "mapper")
+    memberPred =
+      multiAppT EqualityT [projVarType, projectionType]
+      where
+        projectionType =
+          multiAppT ArrowT [memberType, memberType]
+    headType =
+      multiAppT (ConT ''IsLabel) [LitT label, instanceType]
+      where
+        instanceType =
+          arrowChainT [projVarType, ownerType] ownerType
+    fromLabelDec =
+      FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
+
+{-|
+Template of 'IsLabel' for instances mapping to mapper functions.
+
+> instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
+
+-}
+productMapperIsLabel ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Type of the product. -}
+  Type ->
+  {-| Type of the member we\'re focusing on. -}
+  Type ->
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members in the product. -}
+  Int ->
+  {-| Offset of the member we're focusing on. -}
+  Int ->
+  {-| 'IsLabel' instance declaration. -}
+  Dec
+productMapperIsLabel label ownerType memberType conName totalMemberTypes offset =
+  mapperIsLabel label ownerType memberType
+    (Lambdas.productMapper conName totalMemberTypes offset)
 
 -- ** Accessor
 -------------------------
@@ -119,6 +186,9 @@ productAccessorIsLabel label ownerType projectionType conName numMembers offset 
     fromLabelExp =
       Lambdas.productGetter conName numMembers offset
 
+{-|
+> instance (a ~ Maybe Text) => IsLabel "error" (Result -> a)
+-}
 sumAccessorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 sumAccessorIsLabel label ownerType conName memberTypes =
   accessorIsLabel label ownerType projectionType fromLabelExp

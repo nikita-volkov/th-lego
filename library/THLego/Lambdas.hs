@@ -81,6 +81,42 @@ productSetter conName numMembers index =
           pure valName <>
           fmap alphabeticIndexName (enumFromTo (succ index) (pred numMembers))
 
+{-|
+Lambda expression, which maps a product member by index.
+-}
+productMapper ::
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members. -}
+  Int ->
+  {-| Index of the member. -}
+  Int ->
+  {-|
+  Lambda expression of the following form:
+
+  > (member -> member) -> product -> product
+  -}
+  Exp
+productMapper conName numMembers index =
+  LamE [mapperP, stateP] exp
+  where
+    valName =
+      mkName "_x"
+    fnName =
+      mkName "_f"
+    mapperP =
+      VarP fnName
+    stateP =
+      ConP conName pats
+      where
+        pats =
+          fmap (VarP . alphabeticIndexName) (enumFromTo 0 (pred numMembers))
+    exp =
+      foldl' AppE (ConE conName) $
+        fmap (ConE . alphabeticIndexName) (enumFromTo 0 (pred index)) <>
+        pure (AppE (VarE fnName) (VarE valName)) <>
+        fmap (ConE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
+
 adtConstructorNarrower :: Name -> Int -> Exp
 adtConstructorNarrower conName numMembers =
   matcher [positive, negative]
