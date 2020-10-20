@@ -12,6 +12,9 @@ import qualified THLego.Lambdas as Lambdas
 -- * IsLabel
 -------------------------
 
+{-|
+The most general template for 'IsLabel'.
+-}
 isLabel :: TyLit -> Type -> Exp -> Dec
 isLabel label repType fromLabelExp =
   InstanceD Nothing [] headType [fromLabelDec]
@@ -67,7 +70,24 @@ tupleAdtConstructorIsLabel label ownerType conName memberTypes =
 -- ** Accessor
 -------------------------
 
-productAccessorIsLabel :: TyLit -> Type -> Type -> Name -> Int -> Int -> Dec
+{-|
+Instance of 'IsLabel' for a member of a product type.
+-}
+productAccessorIsLabel ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Type of the product. -}
+  Type ->
+  {-| Type of the member we\'re focusing on. -}
+  Type ->
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members in the product. -}
+  Int ->
+  {-| Offset of the member we're focusing on. -}
+  Int ->
+  {-| 'IsLabel' instance declaration. -}
+  Dec
 productAccessorIsLabel label ownerType projectionType conName numMembers offset =
   isLabel label repType fromLabelExp
   where
@@ -129,6 +149,7 @@ enumHasField ::
   Type ->
   {-| Name of the constructor. -}
   Name ->
+  {-| 'HasField' instance declaration. -}
   Dec
 enumHasField fieldLabel ownerType constructorName =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
@@ -170,6 +191,7 @@ sumHasField ::
   Name ->
   {-| Member types of that constructor. -}
   [Type] ->
+  {-| 'HasField' instance declaration. -}
   Dec
 sumHasField fieldLabel ownerType constructorName memberTypes =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
@@ -203,7 +225,7 @@ productHasField ::
   TyLit ->
   {-| Type of the product. -}
   Type ->
-  {-| Type of the member we're focusing on. -}
+  {-| Type of the member we\'re focusing on. -}
   Type ->
   {-| Constructor name. -}
   Name ->
@@ -211,6 +233,7 @@ productHasField ::
   Int ->
   {-| Offset of the member we're focusing on. -}
   Int ->
+  {-| 'HasField' instance declaration. -}
   Dec
 productHasField fieldLabel ownerType projectionType constructorName totalMemberTypes offset =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
