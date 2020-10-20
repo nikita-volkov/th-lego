@@ -115,9 +115,7 @@ alphabeticIndexName a =
   mkName string
   where
     string =
-      if a < 25
-        then showChar (chr (97 + a)) ""
-        else showChar '_' (show a)
+      showIntAtBase 26 (chr . (+) 97) a ""
 
 enumAlphabeticNames :: Int -> [Name]
 enumAlphabeticNames =
