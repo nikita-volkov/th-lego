@@ -219,8 +219,8 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
       [matching, unmatching]
       where
         varNames =
-          enumFromTo 1 (length memberTypes) &
-          fmap (mkName . showChar '_' . show)
+          memberTypes &
+            mapWithAlphabeticName (const . id)
         matching =
           Clause [ConP constructorName pats] (NormalB bodyExp) []
           where
