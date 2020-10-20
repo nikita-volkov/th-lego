@@ -34,7 +34,7 @@ productGetter conName numMembers index =
   LamE [pat] exp
   where
     varName =
-      indexName index
+      alphabeticIndexName index
     pat =
       ConP conName pats
       where
@@ -70,16 +70,16 @@ productSetter conName numMembers index =
       ConP conName pats
       where
         pats =
-          fmap (VarP . indexName) (enumFromTo 0 (pred numMembers))
+          fmap (VarP . alphabeticIndexName) (enumFromTo 0 (pred numMembers))
     valP =
       VarP valName
     exp =
       foldl' AppE (ConE conName) (fmap VarE names)
       where
         names =
-          fmap indexName (enumFromTo 0 (pred index)) <>
+          fmap alphabeticIndexName (enumFromTo 0 (pred index)) <>
           pure valName <>
-          fmap indexName (enumFromTo (succ index) (pred numMembers))
+          fmap alphabeticIndexName (enumFromTo (succ index) (pred numMembers))
 
 adtConstructorNarrower :: Name -> Int -> Exp
 adtConstructorNarrower conName numMembers =
@@ -89,7 +89,7 @@ adtConstructorNarrower conName numMembers =
       Match (ConP conName (fmap VarP varNames)) (NormalB exp) []
       where
         varNames =
-          fmap indexName (enumFromTo 0 (pred numMembers))
+          fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
         exp =
           AppE (ConE 'Just) (Compat.tupE (fmap VarE varNames))
     negative =
@@ -115,7 +115,7 @@ singleConstructorAdtToTuple conName numMembers =
   LamE [pat] exp
   where
     varNames =
-      fmap indexName (enumFromTo 0 (pred numMembers))
+      fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     pat =
       ConP conName (fmap VarP varNames)
     exp =
@@ -126,7 +126,7 @@ tupleToProduct conName numMembers =
   LamE [pat] exp
   where
     varNames =
-      fmap indexName (enumFromTo 0 (pred numMembers))
+      fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     pat =
       TupP (fmap VarP varNames)
     exp =

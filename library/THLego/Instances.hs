@@ -37,7 +37,7 @@ constructorIsLabel label ownerType memberTypes fromLabelExp =
   where
     paramPreds =
       memberTypes
-        & Helpers.mapWithName (\ n t -> multiAppT EqualityT [VarT n, t])
+        & Helpers.mapWithAlphabeticName (\ n t -> multiAppT EqualityT [VarT n, t])
     headType =
       multiAppT (ConT ''IsLabel) [LitT label, repType]
       where
@@ -45,7 +45,7 @@ constructorIsLabel label ownerType memberTypes fromLabelExp =
           arrowChainT memberVarTypes ownerType
           where
             memberVarTypes =
-              Helpers.mapWithName (const . VarT) paramPreds
+              Helpers.mapWithAlphabeticName (const . VarT) paramPreds
     fromLabelDec =
       FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
 

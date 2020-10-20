@@ -106,24 +106,33 @@ appliedTupleOrSingletonE =
     [a] -> a
     a -> appliedTupleE a
 
-indexName :: Int -> Name
-indexName =
+decimalIndexName :: Int -> Name
+decimalIndexName =
   mkName . showChar '_' . show
 
-enumNames :: Int -> [Name]
-enumNames =
-  fmap indexName . enumFromTo 0 . pred
+alphabeticIndexName :: Int -> Name
+alphabeticIndexName a =
+  mkName string
+  where
+    string =
+      if a < 25
+        then showChar (chr (97 + a)) ""
+        else showChar '_' (show a)
+
+enumAlphabeticNames :: Int -> [Name]
+enumAlphabeticNames =
+  fmap alphabeticIndexName . enumFromTo 0 . pred
 
 {-|
 Map every element of a list with a new name.
 -}
-{-# INLINE mapWithName #-}
-mapWithName :: (Name -> a -> b) -> [a] -> [b]
-mapWithName f list =
+{-# INLINE mapWithAlphabeticName #-}
+mapWithAlphabeticName :: (Name -> a -> b) -> [a] -> [b]
+mapWithAlphabeticName f list =
   foldr step (const []) list 0
   where
     step a next !index =
-      f (indexName index) a : next (succ index)
+      f (alphabeticIndexName index) a : next (succ index)
 
 aName :: Name
 aName =
