@@ -7,6 +7,7 @@ import Language.Haskell.TH
 import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
 import qualified THLego.Lambdas as Lambdas
+import qualified THLego.Helpers as Helpers
 
 
 -- * IsLabel
@@ -30,45 +31,69 @@ isLabel label repType fromLabelExp =
 -- ** Constructor
 -------------------------
 
+constructorIsLabel :: TyLit -> Type -> [Type] -> Exp -> Dec
+constructorIsLabel label ownerType memberTypes fromLabelExp =
+  InstanceD Nothing paramPreds headType [fromLabelDec]
+  where
+    paramPreds =
+      memberTypes
+        & Helpers.mapWithName (\ n t -> multiAppT EqualityT [VarT n, t])
+    headType =
+      multiAppT (ConT ''IsLabel) [LitT label, repType]
+      where
+        repType =
+          arrowChainT memberVarTypes ownerType
+          where
+            memberVarTypes =
+              Helpers.mapWithName (const . VarT) paramPreds
+    fromLabelDec =
+      FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
+
 newtypeConstructorIsLabel :: TyLit -> Type -> Name -> Type -> Dec
 newtypeConstructorIsLabel label ownerType conName memberType =
-  isLabel label repType fromLabelExp
-  where
-    repType =
-      arrowChainT [memberType] ownerType
-    fromLabelExp =
-      ConE conName
+  sumConstructorIsLabel label ownerType conName [memberType]
 
 sumConstructorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 sumConstructorIsLabel label ownerType conName memberTypes =
-  isLabel label repType fromLabelExp
-  where
-    repType =
-      arrowChainT memberTypes ownerType
-    fromLabelExp =
-      ConE conName
+  constructorIsLabel label ownerType memberTypes (ConE conName)
 
 enumConstructorIsLabel :: TyLit -> Type -> Name -> Dec
 enumConstructorIsLabel label ownerType conName =
-  isLabel label ownerType fromLabelExp
-  where
-    fromLabelExp =
-      ConE conName
+  sumConstructorIsLabel label ownerType conName []
 
 {-|
 'IsLabel' instance which converts tuple to ADT.
 -}
 tupleAdtConstructorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 tupleAdtConstructorIsLabel label ownerType conName memberTypes =
-  isLabel label repType fromLabelExp
+  constructorIsLabel label ownerType [memberType] fromLabelExp
   where
-    repType =
-      arrowChainT [appliedTupleT memberTypes] ownerType
+    memberType =
+      appliedTupleT memberTypes
     fromLabelExp =
       Lambdas.tupleToProduct conName (length memberTypes)
 
 -- ** Accessor
 -------------------------
+
+{-|
+Template of 'IsLabel' for instances mapping to accessor functions.
+-}
+accessorIsLabel :: TyLit -> Type -> Type -> Exp -> Dec
+accessorIsLabel label ownerType projectionType fromLabelExp =
+  InstanceD Nothing [memberPred] headType [fromLabelDec]
+  where
+    projVarType =
+      VarT aName
+    memberPred =
+      multiAppT EqualityT [projVarType, projectionType]
+    headType =
+      multiAppT (ConT ''IsLabel) [LitT label, instanceType]
+      where
+        instanceType =
+          multiAppT ArrowT [ownerType, projVarType]
+    fromLabelDec =
+      FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
 
 {-|
 Instance of 'IsLabel' for a member of a product type.
@@ -89,34 +114,26 @@ productAccessorIsLabel ::
   {-| 'IsLabel' instance declaration. -}
   Dec
 productAccessorIsLabel label ownerType projectionType conName numMembers offset =
-  isLabel label repType fromLabelExp
+  accessorIsLabel label ownerType projectionType fromLabelExp
   where
-    repType =
-      multiAppT ArrowT [ownerType, projectionType]
     fromLabelExp =
       Lambdas.productGetter conName numMembers offset
 
 sumAccessorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 sumAccessorIsLabel label ownerType conName memberTypes =
-  isLabel label repType fromLabelExp
+  accessorIsLabel label ownerType projectionType fromLabelExp
   where
-    repType =
-      multiAppT ArrowT [ownerType, projectionType]
-      where
-        projectionType =
-          AppT (ConT ''Maybe) (appliedTupleT memberTypes)
+    projectionType =
+      AppT (ConT ''Maybe) (appliedTupleT memberTypes)
     fromLabelExp =
       Lambdas.adtConstructorNarrower conName (length memberTypes)
 
 enumAccessorIsLabel :: TyLit -> Type -> Name -> Dec
 enumAccessorIsLabel label ownerType conName =
-  isLabel label repType fromLabelExp
+  accessorIsLabel label ownerType projectionType fromLabelExp
   where
-    repType =
-      multiAppT ArrowT [ownerType, projectionType]
-      where
-        projectionType =
-          ConT ''Bool
+    projectionType =
+      ConT ''Bool
     fromLabelExp =
       Lambdas.enumConstructorToBool conName
 

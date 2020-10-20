@@ -114,6 +114,17 @@ enumNames :: Int -> [Name]
 enumNames =
   fmap indexName . enumFromTo 0 . pred
 
+{-|
+Map every element of a list with a new name.
+-}
+{-# INLINE mapWithName #-}
+mapWithName :: (Name -> a -> b) -> [a] -> [b]
+mapWithName f list =
+  foldr step (const []) list 0
+  where
+    step a next !index =
+      f (indexName index) a : next (succ index)
+
 aName :: Name
 aName =
   mkName "a"
