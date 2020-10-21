@@ -91,22 +91,19 @@ mapperIsLabel ::
   TyLit ->
   {-| Type of the product. -}
   Type ->
-  {-| Type of the member we\'re focusing on. -}
+  {-| Type of the mapper function. -}
   Type ->
   {-| 'fromLabel' definition expression. -}
   Exp ->
   {-| 'IsLabel' instance declaration. -}
   Dec
-mapperIsLabel label ownerType memberType fromLabelExp =
+mapperIsLabel label ownerType projectionType fromLabelExp =
   InstanceD Nothing [memberPred] headType [fromLabelDec]
   where
     projVarType =
       VarT (mkName "mapper")
     memberPred =
       multiAppT EqualityT [projVarType, projectionType]
-      where
-        projectionType =
-          multiAppT ArrowT [memberType, memberType]
     headType =
       multiAppT (ConT ''IsLabel) [LitT label, instanceType]
       where
@@ -119,7 +116,6 @@ mapperIsLabel label ownerType memberType fromLabelExp =
 Template of 'IsLabel' for instances mapping to mapper functions.
 
 > instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
-
 -}
 productMapperIsLabel ::
   {-| Field label. -}
@@ -137,7 +133,8 @@ productMapperIsLabel ::
   {-| 'IsLabel' instance declaration. -}
   Dec
 productMapperIsLabel label ownerType memberType conName totalMemberTypes offset =
-  mapperIsLabel label ownerType memberType
+  mapperIsLabel label ownerType
+    (multiAppT ArrowT [memberType, memberType])
     (Lambdas.productMapper conName totalMemberTypes offset)
 
 -- ** Accessor
