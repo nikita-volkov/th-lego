@@ -64,22 +64,19 @@ productSetter ::
 productSetter conName numMembers index =
   LamE [stateP, valP] exp
   where
-    valName =
-      mkName "x"
+    memberName =
+      alphabeticIndexName index
+    memberNames =
+      fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     stateP =
       ConP conName pats
       where
         pats =
-          fmap (VarP . alphabeticIndexName) (enumFromTo 0 (pred numMembers))
+          fmap VarP memberNames
     valP =
-      VarP valName
+      VarP memberName
     exp =
-      foldl' AppE (ConE conName) (fmap VarE names)
-      where
-        names =
-          fmap alphabeticIndexName (enumFromTo 0 (pred index)) <>
-          pure valName <>
-          fmap alphabeticIndexName (enumFromTo (succ index) (pred numMembers))
+      foldl' AppE (ConE conName) (fmap VarE memberNames)
 
 {-|
 Lambda expression, which maps a product member by index.
@@ -100,17 +97,21 @@ productMapper ::
 productMapper conName numMembers index =
   LamE [mapperP, stateP] exp
   where
+    memberName =
+      alphabeticIndexName index
+    memberNames =
+      fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     valName =
-      mkName "_x"
+      alphabeticIndexName index
     fnName =
-      mkName "_f"
+      mkName "fn"
     mapperP =
       VarP fnName
     stateP =
       ConP conName pats
       where
         pats =
-          fmap (VarP . alphabeticIndexName) (enumFromTo 0 (pred numMembers))
+          fmap VarP memberNames
     exp =
       foldl' AppE (ConE conName) $
         fmap (VarE . alphabeticIndexName) (enumFromTo 0 (pred index)) <>
@@ -134,10 +135,8 @@ sumMapper ::
 sumMapper conName numMembers =
   LamE [mapperP] (matcher matches)
   where
-    valName =
-      mkName "_x"
     fnName =
-      mkName "_f"
+      mkName "fn"
     mapperP =
       VarP fnName
     matches =
