@@ -117,6 +117,45 @@ productMapper conName numMembers index =
         pure (AppE (VarE fnName) (VarE valName)) <>
         fmap (ConE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
 
+{-|
+Lambda expression, which maps a sum member by index.
+-}
+sumMapper ::
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members. -}
+  Int ->
+  {-|
+  Lambda expression of the following form:
+
+  > (membersTuple -> membersTuple) -> sum -> sum
+  -}
+  Exp
+sumMapper conName numMembers =
+  LamE [mapperP] (matcher matches)
+  where
+    valName =
+      mkName "_x"
+    fnName =
+      mkName "_f"
+    mapperP =
+      VarP fnName
+    matches =
+      [pos, neg]
+      where
+        pos =
+          Match (ConP conName memberPats) (NormalB bodyExp) []
+          where
+            memberVarNames =
+              fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
+            memberPats =
+              fmap VarP memberVarNames
+            bodyExp =
+              AppE (tupleToProduct conName numMembers)
+                (multiAppE (VarE fnName) (fmap VarE memberVarNames))
+        neg =
+          Match (VarP aName) (NormalB (VarE aName)) []
+
 adtConstructorNarrower :: Name -> Int -> Exp
 adtConstructorNarrower conName numMembers =
   matcher [positive, negative]

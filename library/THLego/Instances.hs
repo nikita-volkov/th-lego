@@ -73,7 +73,7 @@ tupleAdtConstructorIsLabel label ownerType conName memberTypes =
   constructorIsLabel label ownerType [memberType] fromLabelExp
   where
     memberType =
-      appliedTupleT memberTypes
+      appliedTupleOrSingletonT memberTypes
     fromLabelExp =
       Lambdas.tupleToProduct conName (length memberTypes)
 
@@ -137,6 +137,27 @@ productMapperIsLabel label ownerType memberType conName totalMemberTypes offset 
     (multiAppT ArrowT [memberType, memberType])
     (Lambdas.productMapper conName totalMemberTypes offset)
 
+{-|
+Template of 'IsLabel' for instances mapping to mapper functions.
+
+> instance (mapper ~ (Int -> Text -> (Int, Text))) => IsLabel "error" (mapper -> Result -> Result)
+-}
+sumMapperIsLabel ::
+  {-| Field label. -}
+  TyLit ->
+  {-| Type of the product. -}
+  Type ->
+  {-| Constructor name. -}
+  Name ->
+  {-| Member types we\'re focusing on. -}
+  [Type] ->
+  {-| 'IsLabel' instance declaration. -}
+  Dec
+sumMapperIsLabel label ownerType conName memberTypes =
+  mapperIsLabel label ownerType
+    (arrowChainT memberTypes (appliedTupleOrSingletonT memberTypes))
+    (Lambdas.sumMapper conName (length memberTypes))
+
 -- ** Accessor
 -------------------------
 
@@ -191,7 +212,7 @@ sumAccessorIsLabel label ownerType conName memberTypes =
   accessorIsLabel label ownerType projectionType fromLabelExp
   where
     projectionType =
-      AppT (ConT ''Maybe) (appliedTupleT memberTypes)
+      AppT (ConT ''Maybe) (appliedTupleOrSingletonT memberTypes)
     fromLabelExp =
       Lambdas.adtConstructorNarrower conName (length memberTypes)
 
