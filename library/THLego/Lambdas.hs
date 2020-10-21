@@ -113,9 +113,9 @@ productMapper conName numMembers index =
           fmap (VarP . alphabeticIndexName) (enumFromTo 0 (pred numMembers))
     exp =
       foldl' AppE (ConE conName) $
-        fmap (ConE . alphabeticIndexName) (enumFromTo 0 (pred index)) <>
+        fmap (VarE . alphabeticIndexName) (enumFromTo 0 (pred index)) <>
         pure (AppE (VarE fnName) (VarE valName)) <>
-        fmap (ConE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
+        fmap (VarE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
 
 {-|
 Lambda expression, which maps a sum member by index.
