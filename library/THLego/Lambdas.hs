@@ -72,7 +72,9 @@ productSetter conName numMembers index =
       ConP conName pats
       where
         pats =
-          fmap VarP memberNames
+          (memberNames & take index & fmap VarP) <>
+          [WildP] <>
+          (memberNames & drop (succ index) & fmap VarP)
     valP =
       VarP memberName
     exp =
