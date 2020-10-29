@@ -1,5 +1,5 @@
 name: th-lego
-version: 0.2.0.1
+version: 0.2.1
 synopsis: Template Haskell construction utilities
 description:
   A collection of templates for the typical patterns appearing
