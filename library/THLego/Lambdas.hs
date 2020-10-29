@@ -202,7 +202,7 @@ sumMapper conName numMembers =
             memberPats =
               fmap VarP memberVarNames
             bodyExp =
-              AppE (tupleToProduct conName numMembers)
+              AppE (tupleOrSingletonToProduct conName numMembers)
                 (multiAppE (VarE fnName) (fmap VarE memberVarNames))
         neg =
           Match (VarP aName) (NormalB (VarE aName)) []
@@ -257,6 +257,12 @@ tupleToProduct conName numMembers =
       TupP (fmap VarP varNames)
     exp =
       multiAppE (ConE conName) (fmap VarE varNames)
+
+tupleOrSingletonToProduct :: Name -> Int -> Exp
+tupleOrSingletonToProduct conName numMembers =
+  if numMembers == 1
+    then ConE conName
+    else tupleToProduct conName numMembers
 
 namedFieldSetter :: Name -> Exp
 namedFieldSetter fieldName =
