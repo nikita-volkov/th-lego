@@ -8,6 +8,56 @@ import qualified TemplateHaskell.Compat.V0208 as Compat
 
 
 {-|
+Van Larrhoven lens.
+-}
+vlLens ::
+  {-| Constructor name. -}
+  Name ->
+  {-| Total amount of members. -}
+  Int ->
+  {-| Index of the member. -}
+  Int ->
+  {-|
+  Lambda expression of the following type:
+  
+  > forall f. Functor f => (a -> f b) -> s -> f t
+  -}
+  Exp
+vlLens conName numMembers index =
+  LamE [onMemberP, productP] exp
+  where
+    -- Reference implementation:
+    -- \ memberMapper (Product a b) -> fmap (\ newMember -> Product newMember b) (memberMapper a)
+    onMemberName =
+      mkName "memberMapper"
+    memberNames =
+      fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
+    onMemberP =
+      VarP onMemberName
+    productP =
+      ConP conName pats
+      where
+        pats =
+          fmap VarP memberNames
+    exp =
+      multiAppE (VarE 'fmap) [setterE, onMemberE]
+      where
+        setterE =
+          LamE [VarP valueName] exp
+          where
+            valueName =
+              mkName "newMember"
+            exp =
+              multiAppE (ConE conName) (fmap VarE argNames)
+              where
+                argNames =
+                  take index memberNames <>
+                  [valueName] <>
+                  drop (succ index) memberNames
+        onMemberE =
+          AppE (VarE onMemberName) (VarE (alphabeticIndexName index))
+
+{-|
 Simulates lambda-case without the need for extension.
 -}
 matcher :: [Match] -> Exp
