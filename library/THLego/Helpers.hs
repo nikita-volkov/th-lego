@@ -169,3 +169,7 @@ applicativeChainE mappingE apEList =
 intersperseInfixE :: Exp -> NonEmpty Exp -> Exp
 intersperseInfixE op =
   foldl1 (\ l r -> InfixE (Just l) op (Just r))
+
+textLitE :: Text -> Exp
+textLitE =
+  LitE . StringL . Text.unpack
