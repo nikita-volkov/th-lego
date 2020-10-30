@@ -2,7 +2,7 @@ module THLego.Helpers
 where
 
 import THLego.Prelude
-import Language.Haskell.TH
+import Language.Haskell.TH.Syntax
 import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
 
@@ -106,6 +106,10 @@ appliedTupleOrSingletonE =
     [a] -> a
     a -> appliedTupleE a
 
+nameString :: Name -> String
+nameString (Name (OccName x) _) =
+  x
+
 decimalIndexName :: Int -> Name
 decimalIndexName =
   mkName . showChar '_' . show
@@ -147,3 +151,21 @@ cName =
 eqConstraintT :: Name -> Type -> Type
 eqConstraintT name =
   AppT (AppT EqualityT (VarT name))
+
+
+-- *
+-------------------------
+
+applicativeChainE :: Exp -> [Exp] -> Exp
+applicativeChainE mappingE apEList =
+  case apEList of
+    h : t ->
+      intersperseInfixE
+        (VarE '(<*>))
+        (InfixE (Just mappingE) (VarE '(<$>)) (Just h) :| t)
+    _ ->
+      mappingE
+
+intersperseInfixE :: Exp -> NonEmpty Exp -> Exp
+intersperseInfixE op =
+  foldl1 (\ l r -> InfixE (Just l) op (Just r))
