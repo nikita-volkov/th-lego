@@ -1,21 +1,17 @@
-module THLego.Instances
-where
+module THLego.Instances where
 
-import THLego.Prelude
-import THLego.Helpers
-import Language.Haskell.TH
-import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
-import qualified THLego.Lambdas as Lambdas
+import Language.Haskell.TH
+import THLego.Helpers
 import qualified THLego.Helpers as Helpers
-
+import qualified THLego.Lambdas as Lambdas
+import THLego.Prelude
+import qualified TemplateHaskell.Compat.V0208 as Compat
 
 -- * IsLabel
--------------------------
 
-{-|
-The most general template for 'IsLabel'.
--}
+-- |
+-- The most general template for 'IsLabel'.
 isLabel :: TyLit -> Type -> Exp -> Dec
 isLabel label repType fromLabelExp =
   InstanceD Nothing [] headType [fromLabelDec]
@@ -29,19 +25,17 @@ isLabel label repType fromLabelExp =
           NormalB fromLabelExp
 
 -- ** Constructor
--------------------------
 
-{-|
-
-> instance (a ~ Text) => IsLabel "error" (a -> Result)
--}
+-- |
+--
+-- > instance (a ~ Text) => IsLabel "error" (a -> Result)
 constructorIsLabel :: TyLit -> Type -> [Type] -> Exp -> Dec
 constructorIsLabel label ownerType memberTypes fromLabelExp =
   InstanceD Nothing paramPreds headType [fromLabelDec]
   where
     paramPreds =
       memberTypes
-        & Helpers.mapWithAlphabeticName (\ n t -> multiAppT EqualityT [VarT n, t])
+        & Helpers.mapWithAlphabeticName (\n t -> multiAppT EqualityT [VarT n, t])
     headType =
       multiAppT (ConT ''IsLabel) [LitT label, repType]
       where
@@ -65,9 +59,8 @@ enumConstructorIsLabel :: TyLit -> Type -> Name -> Dec
 enumConstructorIsLabel label ownerType conName =
   sumConstructorIsLabel label ownerType conName []
 
-{-|
-'IsLabel' instance which converts tuple to ADT.
--}
+-- |
+-- 'IsLabel' instance which converts tuple to ADT.
 tupleAdtConstructorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 tupleAdtConstructorIsLabel label ownerType conName memberTypes =
   constructorIsLabel label ownerType [memberType] fromLabelExp
@@ -78,24 +71,21 @@ tupleAdtConstructorIsLabel label ownerType conName memberTypes =
       Lambdas.tupleToProduct conName (length memberTypes)
 
 -- ** Mapper
--------------------------
 
-{-|
-Template of 'IsLabel' for instances mapping to mapper functions.
-
-> instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
-
--}
+-- |
+-- Template of 'IsLabel' for instances mapping to mapper functions.
+--
+-- > instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
 mapperIsLabel ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Type of the product. -}
+  -- | Type of the product.
   Type ->
-  {-| Type of the mapper function. -}
+  -- | Type of the mapper function.
   Type ->
-  {-| 'fromLabel' definition expression. -}
+  -- | 'fromLabel' definition expression.
   Exp ->
-  {-| 'IsLabel' instance declaration. -}
+  -- | 'IsLabel' instance declaration.
   Dec
 mapperIsLabel label ownerType projectionType fromLabelExp =
   InstanceD Nothing [memberPred] headType [fromLabelDec]
@@ -112,58 +102,58 @@ mapperIsLabel label ownerType projectionType fromLabelExp =
     fromLabelDec =
       FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
 
-{-|
-Template of 'IsLabel' for instances mapping to mapper functions.
-
-> instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
--}
+-- |
+-- Template of 'IsLabel' for instances mapping to mapper functions.
+--
+-- > instance (mapper ~ (Text -> Text)) => IsLabel "name" (mapper -> Person -> Person)
 productMapperIsLabel ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Type of the product. -}
+  -- | Type of the product.
   Type ->
-  {-| Type of the member we\'re focusing on. -}
+  -- | Type of the member we\'re focusing on.
   Type ->
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members in the product. -}
+  -- | Total amount of members in the product.
   Int ->
-  {-| Offset of the member we're focusing on. -}
+  -- | Offset of the member we're focusing on.
   Int ->
-  {-| 'IsLabel' instance declaration. -}
+  -- | 'IsLabel' instance declaration.
   Dec
 productMapperIsLabel label ownerType memberType conName totalMemberTypes offset =
-  mapperIsLabel label ownerType
+  mapperIsLabel
+    label
+    ownerType
     (multiAppT ArrowT [memberType, memberType])
     (Lambdas.productMapper conName totalMemberTypes offset)
 
-{-|
-Template of 'IsLabel' for instances mapping to mapper functions.
-
-> instance (mapper ~ (Int -> Text -> (Int, Text))) => IsLabel "error" (mapper -> Result -> Result)
--}
+-- |
+-- Template of 'IsLabel' for instances mapping to mapper functions.
+--
+-- > instance (mapper ~ (Int -> Text -> (Int, Text))) => IsLabel "error" (mapper -> Result -> Result)
 sumMapperIsLabel ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Type of the product. -}
+  -- | Type of the product.
   Type ->
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Member types we\'re focusing on. -}
+  -- | Member types we\'re focusing on.
   [Type] ->
-  {-| 'IsLabel' instance declaration. -}
+  -- | 'IsLabel' instance declaration.
   Dec
 sumMapperIsLabel label ownerType conName memberTypes =
-  mapperIsLabel label ownerType
+  mapperIsLabel
+    label
+    ownerType
     (arrowChainT memberTypes (appliedTupleOrSingletonT memberTypes))
     (Lambdas.sumMapper conName (length memberTypes))
 
 -- ** Accessor
--------------------------
 
-{-|
-Template of 'IsLabel' for instances mapping to accessor functions.
--}
+-- |
+-- Template of 'IsLabel' for instances mapping to accessor functions.
 accessorIsLabel :: TyLit -> Type -> Type -> Exp -> Dec
 accessorIsLabel label ownerType projectionType fromLabelExp =
   InstanceD Nothing [memberPred] headType [fromLabelDec]
@@ -180,23 +170,22 @@ accessorIsLabel label ownerType projectionType fromLabelExp =
     fromLabelDec =
       FunD 'fromLabel [Clause [] (NormalB fromLabelExp) []]
 
-{-|
-Instance of 'IsLabel' for a member of a product type.
--}
+-- |
+-- Instance of 'IsLabel' for a member of a product type.
 productAccessorIsLabel ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Type of the product. -}
+  -- | Type of the product.
   Type ->
-  {-| Type of the member we\'re focusing on. -}
+  -- | Type of the member we\'re focusing on.
   Type ->
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members in the product. -}
+  -- | Total amount of members in the product.
   Int ->
-  {-| Offset of the member we're focusing on. -}
+  -- | Offset of the member we're focusing on.
   Int ->
-  {-| 'IsLabel' instance declaration. -}
+  -- | 'IsLabel' instance declaration.
   Dec
 productAccessorIsLabel label ownerType projectionType conName numMembers offset =
   accessorIsLabel label ownerType projectionType fromLabelExp
@@ -204,9 +193,8 @@ productAccessorIsLabel label ownerType projectionType conName numMembers offset 
     fromLabelExp =
       Lambdas.productGetter conName numMembers offset
 
-{-|
-> instance (a ~ Maybe Text) => IsLabel "error" (Result -> a)
--}
+-- |
+-- > instance (a ~ Maybe Text) => IsLabel "error" (Result -> a)
 sumAccessorIsLabel :: TyLit -> Type -> Name -> [Type] -> Dec
 sumAccessorIsLabel label ownerType conName memberTypes =
   accessorIsLabel label ownerType projectionType fromLabelExp
@@ -225,11 +213,9 @@ enumAccessorIsLabel label ownerType conName =
     fromLabelExp =
       Lambdas.enumConstructorToBool conName
 
-
 -- * 'HasField'
--------------------------
 
-{-| The most general template for 'HasField'. -}
+-- | The most general template for 'HasField'.
 hasField :: TyLit -> Type -> Type -> [Clause] -> Dec
 hasField fieldLabel ownerType projectionType getFieldFunClauses =
   InstanceD Nothing [] headType [getFieldDec]
@@ -239,22 +225,21 @@ hasField fieldLabel ownerType projectionType getFieldFunClauses =
     getFieldDec =
       FunD 'getField getFieldFunClauses
 
-{-|
-'HasField' instance which focuses on a variant of an enum
-and projects it into 'Bool' signaling whether the value matches.
-
-Generates code of the following pattern:
-
-> instance HasField "fieldLabel" enumType Bool
--}
+-- |
+-- 'HasField' instance which focuses on a variant of an enum
+-- and projects it into 'Bool' signaling whether the value matches.
+--
+-- Generates code of the following pattern:
+--
+-- > instance HasField "fieldLabel" enumType Bool
 enumHasField ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Enum type. -}
+  -- | Enum type.
   Type ->
-  {-| Name of the constructor. -}
+  -- | Name of the constructor.
   Name ->
-  {-| 'HasField' instance declaration. -}
+  -- | 'HasField' instance declaration.
   Dec
 enumHasField fieldLabel ownerType constructorName =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
@@ -275,28 +260,27 @@ enumHasField fieldLabel ownerType constructorName =
             bodyExp =
               ConE 'False
 
-{-|
-Instance of 'HasField' for a constructor of a sum ADT,
-projecting it into a 'Maybe' tuple of its members.
-
-Generates code of the following pattern:
-
-> instance HasField "fieldLabel" sumAdt (Maybe projectionType)
-
-- When the amount of member types is 0, @projectionType@ is @()@.
-- When the amount of member types is 1, it is that member type.
-- Otherwise it is a tuple of those members.
--}
+-- |
+-- Instance of 'HasField' for a constructor of a sum ADT,
+-- projecting it into a 'Maybe' tuple of its members.
+--
+-- Generates code of the following pattern:
+--
+-- > instance HasField "fieldLabel" sumAdt (Maybe projectionType)
+--
+-- - When the amount of member types is 0, @projectionType@ is @()@.
+-- - When the amount of member types is 1, it is that member type.
+-- - Otherwise it is a tuple of those members.
 sumHasField ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| The ADT type. -}
+  -- | The ADT type.
   Type ->
-  {-| Name of the constructor. -}
+  -- | Name of the constructor.
   Name ->
-  {-| Member types of that constructor. -}
+  -- | Member types of that constructor.
   [Type] ->
-  {-| 'HasField' instance declaration. -}
+  -- | 'HasField' instance declaration.
   Dec
 sumHasField fieldLabel ownerType constructorName memberTypes =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
@@ -307,8 +291,8 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
       [matching, unmatching]
       where
         varNames =
-          memberTypes &
-            mapWithAlphabeticName (const . id)
+          memberTypes
+            & mapWithAlphabeticName (const . id)
         matching =
           Clause [ConP constructorName pats] (NormalB bodyExp) []
           where
@@ -322,23 +306,22 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
             bodyExp =
               ConE 'Nothing
 
-{-|
-Instance of 'HasField' for a member of a product type.
--}
+-- |
+-- Instance of 'HasField' for a member of a product type.
 productHasField ::
-  {-| Field label. -}
+  -- | Field label.
   TyLit ->
-  {-| Type of the product. -}
+  -- | Type of the product.
   Type ->
-  {-| Type of the member we\'re focusing on. -}
+  -- | Type of the member we\'re focusing on.
   Type ->
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members in the product. -}
+  -- | Total amount of members in the product.
   Int ->
-  {-| Offset of the member we're focusing on. -}
+  -- | Offset of the member we're focusing on.
   Int ->
-  {-| 'HasField' instance declaration. -}
+  -- | 'HasField' instance declaration.
   Dec
 productHasField fieldLabel ownerType projectionType constructorName totalMemberTypes offset =
   hasField fieldLabel ownerType projectionType getFieldFunClauses
@@ -347,8 +330,8 @@ productHasField fieldLabel ownerType projectionType constructorName totalMemberT
       [Clause [ConP constructorName pats] (NormalB bodyExp) []]
       where
         pats =
-          replicate offset WildP <>
-          bool empty [VarP aName] (totalMemberTypes > 0) <>
-          replicate (totalMemberTypes - offset - 1) WildP
+          replicate offset WildP
+            <> bool empty [VarP aName] (totalMemberTypes > 0)
+            <> replicate (totalMemberTypes - offset - 1) WildP
         bodyExp =
           VarE aName

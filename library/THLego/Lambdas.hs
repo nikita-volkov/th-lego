@@ -1,27 +1,23 @@
-module THLego.Lambdas
-where
+module THLego.Lambdas where
 
-import THLego.Prelude
-import THLego.Helpers
 import Language.Haskell.TH
+import THLego.Helpers
+import THLego.Prelude
 import qualified TemplateHaskell.Compat.V0208 as Compat
 
-
-{-|
-Van Larrhoven lens.
--}
+-- |
+-- Van Larrhoven lens.
 vlLens ::
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members. -}
+  -- | Total amount of members.
   Int ->
-  {-| Index of the member. -}
+  -- | Index of the member.
   Int ->
-  {-|
-  Lambda expression of the following type:
-  
-  > forall f. Functor f => (a -> f b) -> s -> f t
-  -}
+  -- |
+  --  Lambda expression of the following type:
+  --
+  --  > forall f. Functor f => (a -> f b) -> s -> f t
   Exp
 vlLens conName numMembers index =
   LamE [onMemberP, productP] exp
@@ -51,34 +47,31 @@ vlLens conName numMembers index =
               multiAppE (ConE conName) (fmap VarE argNames)
               where
                 argNames =
-                  take index memberNames <>
-                  [valueName] <>
-                  drop (succ index) memberNames
+                  take index memberNames
+                    <> [valueName]
+                    <> drop (succ index) memberNames
         onMemberE =
           AppE (VarE onMemberName) (VarE (alphabeticIndexName index))
 
-{-|
-Simulates lambda-case without the need for extension.
--}
+-- |
+-- Simulates lambda-case without the need for extension.
 matcher :: [Match] -> Exp
 matcher matches =
   LamE [VarP aName] (CaseE (VarE aName) matches)
 
-{-|
-Lambda expression, which extracts a product member by index.
--}
+-- |
+-- Lambda expression, which extracts a product member by index.
 productGetter ::
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members. -}
+  -- | Total amount of members.
   Int ->
-  {-| Index of the member. -}
+  -- | Index of the member.
   Int ->
-  {-|
-  Lambda expression of the following form:
-  
-  > product -> member
-  -}
+  -- |
+  --  Lambda expression of the following form:
+  --
+  --  > product -> member
   Exp
 productGetter conName numMembers index =
   LamE [pat] exp
@@ -89,27 +82,25 @@ productGetter conName numMembers index =
       ConP conName pats
       where
         pats =
-          replicate index WildP <>
-          pure (VarP varName) <>
-          replicate (numMembers - index - 1) WildP
+          replicate index WildP
+            <> pure (VarP varName)
+            <> replicate (numMembers - index - 1) WildP
     exp =
       VarE varName
 
-{-|
-Lambda expression, which sets a product member by index.
--}
+-- |
+-- Lambda expression, which sets a product member by index.
 productSetter ::
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members. -}
+  -- | Total amount of members.
   Int ->
-  {-| Index of the member. -}
+  -- | Index of the member.
   Int ->
-  {-|
-  Lambda expression of the following form:
-
-  > product -> member -> product
-  -}
+  -- |
+  --  Lambda expression of the following form:
+  --
+  --  > product -> member -> product
   Exp
 productSetter conName numMembers index =
   LamE [stateP, valP] exp
@@ -122,29 +113,27 @@ productSetter conName numMembers index =
       ConP conName pats
       where
         pats =
-          (memberNames & take index & fmap VarP) <>
-          [WildP] <>
-          (memberNames & drop (succ index) & fmap VarP)
+          (memberNames & take index & fmap VarP)
+            <> [WildP]
+            <> (memberNames & drop (succ index) & fmap VarP)
     valP =
       VarP memberName
     exp =
       foldl' AppE (ConE conName) (fmap VarE memberNames)
 
-{-|
-Lambda expression, which maps a product member by index.
--}
+-- |
+-- Lambda expression, which maps a product member by index.
 productMapper ::
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members. -}
+  -- | Total amount of members.
   Int ->
-  {-| Index of the member. -}
+  -- | Index of the member.
   Int ->
-  {-|
-  Lambda expression of the following form:
-
-  > (member -> member) -> product -> product
-  -}
+  -- |
+  --  Lambda expression of the following form:
+  --
+  --  > (member -> member) -> product -> product
   Exp
 productMapper conName numMembers index =
   LamE [mapperP, stateP] exp
@@ -166,23 +155,21 @@ productMapper conName numMembers index =
           fmap VarP memberNames
     exp =
       foldl' AppE (ConE conName) $
-        fmap (VarE . alphabeticIndexName) (enumFromTo 0 (pred index)) <>
-        pure (AppE (VarE fnName) (VarE valName)) <>
-        fmap (VarE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
+        fmap (VarE . alphabeticIndexName) (enumFromTo 0 (pred index))
+          <> pure (AppE (VarE fnName) (VarE valName))
+          <> fmap (VarE . alphabeticIndexName) (enumFromTo (succ index) (pred numMembers))
 
-{-|
-Lambda expression, which maps a sum member by index.
--}
+-- |
+-- Lambda expression, which maps a sum member by index.
 sumMapper ::
-  {-| Constructor name. -}
+  -- | Constructor name.
   Name ->
-  {-| Total amount of members. -}
+  -- | Total amount of members.
   Int ->
-  {-|
-  Lambda expression of the following form:
-
-  > (membersTuple -> membersTuple) -> sum -> sum
-  -}
+  -- |
+  --  Lambda expression of the following form:
+  --
+  --  > (membersTuple -> membersTuple) -> sum -> sum
   Exp
 sumMapper conName numMembers =
   LamE [mapperP] (matcher matches)
@@ -202,7 +189,8 @@ sumMapper conName numMembers =
             memberPats =
               fmap VarP memberVarNames
             bodyExp =
-              AppE (tupleOrSingletonToProduct conName numMembers)
+              AppE
+                (tupleOrSingletonToProduct conName numMembers)
                 (multiAppE (VarE fnName) (fmap VarE memberVarNames))
         neg =
           Match (VarP aName) (NormalB (VarE aName)) []

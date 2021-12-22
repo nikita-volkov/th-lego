@@ -1,14 +1,11 @@
-module THLego.Helpers
-where
+module THLego.Helpers where
 
-import THLego.Prelude
-import Language.Haskell.TH.Syntax
-import qualified TemplateHaskell.Compat.V0208 as Compat
 import qualified Data.Text as Text
-
+import Language.Haskell.TH.Syntax
+import THLego.Prelude
+import qualified TemplateHaskell.Compat.V0208 as Compat
 
 -- * Decs
--------------------------
 
 typeSynonymDec :: Name -> Type -> Dec
 typeSynonymDec a b =
@@ -33,7 +30,7 @@ recordAdtDec typeName fields =
   DataD [] typeName [] Nothing [con] []
   where
     con =
-      RecC typeName (fmap (\ (fieldName, fieldType) -> (fieldName, fieldBang, fieldType)) fields)
+      RecC typeName (fmap (\(fieldName, fieldType) -> (fieldName, fieldBang, fieldType)) fields)
 
 productAdtDec :: Name -> [Type] -> Dec
 productAdtDec typeName memberTypes =
@@ -52,11 +49,9 @@ sumCon a b =
 
 enumDec :: Name -> [Name] -> Dec
 enumDec a b =
-  DataD [] a [] Nothing (fmap (\ c -> NormalC c []) b) []
-
+  DataD [] a [] Nothing (fmap (\c -> NormalC c []) b) []
 
 -- *
--------------------------
 
 textName :: Text -> Name
 textName =
@@ -84,7 +79,7 @@ multiAppE base args =
 
 arrowChainT :: [Type] -> Type -> Type
 arrowChainT params result =
-  foldr (\ a b -> AppT (AppT ArrowT a) b) result params
+  foldr (\a b -> AppT (AppT ArrowT a) b) result params
 
 appliedTupleT :: [Type] -> Type
 appliedTupleT a =
@@ -92,7 +87,7 @@ appliedTupleT a =
 
 appliedTupleOrSingletonT :: [Type] -> Type
 appliedTupleOrSingletonT =
-  \ case
+  \case
     [a] -> a
     a -> appliedTupleT a
 
@@ -102,7 +97,7 @@ appliedTupleE =
 
 appliedTupleOrSingletonE :: [Exp] -> Exp
 appliedTupleOrSingletonE =
-  \ case
+  \case
     [a] -> a
     a -> appliedTupleE a
 
@@ -125,9 +120,8 @@ enumAlphabeticNames :: Int -> [Name]
 enumAlphabeticNames =
   fmap alphabeticIndexName . enumFromTo 0 . pred
 
-{-|
-Map every element of a list with a new name.
--}
+-- |
+-- Map every element of a list with a new name.
 {-# INLINE mapWithAlphabeticName #-}
 mapWithAlphabeticName :: (Name -> a -> b) -> [a] -> [b]
 mapWithAlphabeticName f list =
@@ -152,9 +146,7 @@ eqConstraintT :: Name -> Type -> Type
 eqConstraintT name =
   AppT (AppT EqualityT (VarT name))
 
-
 -- *
--------------------------
 
 applicativeChainE :: Exp -> [Exp] -> Exp
 applicativeChainE mappingE apEList =
@@ -168,7 +160,7 @@ applicativeChainE mappingE apEList =
 
 intersperseInfixE :: Exp -> NonEmpty Exp -> Exp
 intersperseInfixE op =
-  foldl1 (\ l r -> InfixE (Just l) op (Just r))
+  foldl1 (\l r -> InfixE (Just l) op (Just r))
 
 textLitE :: Text -> Exp
 textLitE =
