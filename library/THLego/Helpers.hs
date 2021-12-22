@@ -156,7 +156,7 @@ applicativeChainE mappingE apEList =
         (VarE '(<*>))
         (InfixE (Just mappingE) (VarE '(<$>)) (Just h) :| t)
     _ ->
-      mappingE
+      AppE (VarE 'pure) mappingE
 
 intersperseInfixE :: Exp -> NonEmpty Exp -> Exp
 intersperseInfixE op =
