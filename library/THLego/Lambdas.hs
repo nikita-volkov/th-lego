@@ -31,7 +31,7 @@ vlLens conName numMembers index =
     onMemberP =
       VarP onMemberName
     productP =
-      ConP conName pats
+      Compat.conp conName pats
       where
         pats =
           fmap VarP memberNames
@@ -79,7 +79,7 @@ productGetter conName numMembers index =
     varName =
       alphabeticIndexName index
     pat =
-      ConP conName pats
+      Compat.conp conName pats
       where
         pats =
           replicate index WildP
@@ -110,7 +110,7 @@ productSetter conName numMembers index =
     memberNames =
       fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     stateP =
-      ConP conName pats
+      Compat.conp conName pats
       where
         pats =
           (memberNames & take index & fmap VarP)
@@ -149,7 +149,7 @@ productMapper conName numMembers index =
     mapperP =
       VarP fnName
     stateP =
-      ConP conName pats
+      Compat.conp conName pats
       where
         pats =
           fmap VarP memberNames
@@ -182,7 +182,7 @@ sumMapper conName numMembers =
       [pos, neg]
       where
         pos =
-          Match (ConP conName memberPats) (NormalB bodyExp) []
+          Match (Compat.conp conName memberPats) (NormalB bodyExp) []
           where
             memberVarNames =
               fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
@@ -200,7 +200,7 @@ adtConstructorNarrower conName numMembers =
   matcher [positive, negative]
   where
     positive =
-      Match (ConP conName (fmap VarP varNames)) (NormalB exp) []
+      Match (Compat.conp conName (fmap VarP varNames)) (NormalB exp) []
       where
         varNames =
           fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
@@ -214,7 +214,7 @@ enumConstructorToBool constructorName =
   matcher [positive, negative]
   where
     positive =
-      Match (ConP constructorName []) (NormalB bodyExp) []
+      Match (Compat.conp constructorName []) (NormalB bodyExp) []
       where
         bodyExp =
           ConE 'True
@@ -231,7 +231,7 @@ singleConstructorAdtToTuple conName numMembers =
     varNames =
       fmap alphabeticIndexName (enumFromTo 0 (pred numMembers))
     pat =
-      ConP conName (fmap VarP varNames)
+      Compat.conp conName (fmap VarP varNames)
     exp =
       Compat.tupE (fmap VarE varNames)
 

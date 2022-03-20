@@ -250,7 +250,7 @@ enumHasField fieldLabel ownerType constructorName =
       [matching, unmatching]
       where
         matching =
-          Clause [ConP constructorName []] (NormalB bodyExp) []
+          Clause [Compat.conp constructorName []] (NormalB bodyExp) []
           where
             bodyExp =
               ConE 'True
@@ -294,7 +294,7 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
           memberTypes
             & mapWithAlphabeticName (const . id)
         matching =
-          Clause [ConP constructorName pats] (NormalB bodyExp) []
+          Clause [Compat.conp constructorName pats] (NormalB bodyExp) []
           where
             pats =
               fmap VarP varNames
@@ -327,7 +327,7 @@ productHasField fieldLabel ownerType projectionType constructorName totalMemberT
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where
     getFieldFunClauses =
-      [Clause [ConP constructorName pats] (NormalB bodyExp) []]
+      [Clause [Compat.conp constructorName pats] (NormalB bodyExp) []]
       where
         pats =
           replicate offset WildP
