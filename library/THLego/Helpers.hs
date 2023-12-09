@@ -51,8 +51,6 @@ enumDec :: Name -> [Name] -> Dec
 enumDec a b =
   DataD [] a [] Nothing (fmap (\c -> NormalC c []) b) []
 
--- *
-
 textName :: Text -> Name
 textName =
   mkName . Text.unpack
@@ -145,8 +143,6 @@ cName =
 eqConstraintT :: Name -> Type -> Type
 eqConstraintT name =
   AppT (AppT EqualityT (VarT name))
-
--- *
 
 applicativeChainE :: Exp -> [Exp] -> Exp
 applicativeChainE mappingE apEList =
