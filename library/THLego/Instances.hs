@@ -1,6 +1,5 @@
 module THLego.Instances where
 
-import qualified Data.Text as Text
 import Language.Haskell.TH
 import THLego.Helpers
 import qualified THLego.Helpers as Helpers
@@ -250,7 +249,7 @@ enumHasField fieldLabel ownerType constructorName =
       [matching, unmatching]
       where
         matching =
-          Clause [Compat.conp constructorName []] (NormalB bodyExp) []
+          Clause [Compat.conP constructorName []] (NormalB bodyExp) []
           where
             bodyExp =
               ConE 'True
@@ -294,7 +293,7 @@ sumHasField fieldLabel ownerType constructorName memberTypes =
           memberTypes
             & mapWithAlphabeticName (const . id)
         matching =
-          Clause [Compat.conp constructorName pats] (NormalB bodyExp) []
+          Clause [Compat.conP constructorName pats] (NormalB bodyExp) []
           where
             pats =
               fmap VarP varNames
@@ -327,7 +326,7 @@ productHasField fieldLabel ownerType projectionType constructorName totalMemberT
   hasField fieldLabel ownerType projectionType getFieldFunClauses
   where
     getFieldFunClauses =
-      [Clause [Compat.conp constructorName pats] (NormalB bodyExp) []]
+      [Clause [Compat.conP constructorName pats] (NormalB bodyExp) []]
       where
         pats =
           replicate offset WildP
